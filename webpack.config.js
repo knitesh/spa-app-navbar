@@ -1,4 +1,4 @@
-const { merge } = require("webpack-merge");
+const { mergeWithRules } = require("webpack-merge");
 const singleSpaDefaults = require("webpack-config-single-spa-react");
 
 const path = require("path");
@@ -11,12 +11,19 @@ module.exports = (webpackConfigEnv, argv) => {
     argv,
   });
 
-  const mergedConfig = merge(defaultConfig, {
+  const mergedConfig = mergeWithRules({
+    module: {
+      rules: {
+        test: "match",
+        use: "replace",
+      },
+    },
+  })(defaultConfig, {
     // modify the webpack config however you'd like to by adding to this object
     module: {
       rules: [
         {
-          test: /\.tailwind.css$/i,
+          test: /\.css$/i,
           use: ["style-loader", "css-loader", "postcss-loader"],
         },
       ],
