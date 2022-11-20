@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Chevron } from "./icons";
 import { sidebarData } from "./constants";
 import {
@@ -6,6 +7,8 @@ import {
   AccordionHeader,
   AccordionItem,
 } from "react-headless-accordion";
+
+import { auth$, login } from "@nitex/utility";
 
 const Sidebar = () => {
   const printItem = (item, index) => {
@@ -154,6 +157,30 @@ const Sidebar = () => {
         return null;
     }
   };
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState();
+
+  useEffect(() => {
+    let timeout;
+    const sub = auth$.subscribe(({ pending, error }) => {
+      // redirecting to /home when logged in will be done in the navbar. Cohesive code FTW!
+      setPending(pending);
+      setError(error);
+      timeout = setTimeout(() => {
+        setError();
+      }, 2000);
+    });
+    return () => {
+      clearInterval(timeout);
+      sub.unsubscribe();
+    };
+  }, []);
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    const { username, password } = document.forms.login.elements;
+    login("exampleuser", "examplepassword");
+  };
 
   return (
     <div
@@ -178,6 +205,16 @@ const Sidebar = () => {
           />
         </svg>
         <span className="font-semibold text-3xl text-white/70">School</span>
+      </div>
+      <div>
+        <form name="login" className="login-form" onSubmit={onSubmit}>
+          <div>
+            <button type="submit" class="submit" disabled={pending}>
+              {pending ? "Loading..." : "Submit"}
+            </button>
+          </div>
+          {error && <div className="login-error">{error}</div>}
+        </form>
       </div>
 
       <div className="mt-3 font-light">
